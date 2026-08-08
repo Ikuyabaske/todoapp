@@ -73,11 +73,22 @@ npm run dev:web
 
 VAPIDキー・Cloudflare Tunnel Tokenの設定方法は、それぞれ実装が完了するPhase 7・Phase 9のタイミングで本READMEに追記します。
 
+## テスト
+
+日付計算ロジック（`packages/core`）はDB非依存のためユニットテストで検証できます。
+
+```bash
+npm install
+npm run test --workspace packages/core
+```
+
+繰り返し計算（月末クランプ・閏年・年またぎ・完了日基準の計算）をカバーしています。
+
 ## 現在の実装状況
 
 - [x] Phase 1: Docker Compose / PostgreSQL / Next.js / Prisma / 基本画面
-- [ ] Phase 2: タスクCRUD
-- [ ] Phase 3: 繰り返し計算
+- [x] Phase 2: タスクCRUD
+- [x] Phase 3: 繰り返し計算
 - [ ] Phase 4: 完了履歴
 - [ ] Phase 5: ホーム画面分類
 - [ ] Phase 6: PWA化
