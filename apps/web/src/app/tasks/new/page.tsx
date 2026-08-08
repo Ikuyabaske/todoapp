@@ -1,13 +1,23 @@
-import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/server/auth";
+import { prisma } from "@upkeep/db";
+import { TaskForm } from "@/components/TaskForm";
 
-export default function NewTaskPage(): JSX.Element {
+export default async function NewTaskPage(): Promise<JSX.Element> {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  const categories = userId
+    ? await prisma.category.findMany({
+        where: { userId },
+        orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+      })
+    : [];
+
   return (
     <main className="page">
       <h1>タスク登録</h1>
-      <p className="muted">Phase 2（タスクCRUD）で実装予定です。</p>
-      <Link className="btn" href="/">
-        ホームに戻る
-      </Link>
+      <TaskForm mode="create" categories={categories} />
     </main>
   );
 }

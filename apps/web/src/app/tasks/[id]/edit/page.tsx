@@ -1,14 +1,50 @@
-import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { formatDateOnly } from "@upkeep/core";
+import { authOptions } from "@/server/auth";
+import { prisma } from "@upkeep/db";
+import { TaskForm } from "@/components/TaskForm";
 
-export default function EditTaskPage({ params }: { params: { id: string } }): JSX.Element {
+export default async function EditTaskPage({
+  params,
+}: {
+  params: { id: string };
+}): Promise<JSX.Element> {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  if (!userId) {
+    notFound();
+  }
+
+  const [task, categories] = await Promise.all([
+    prisma.task.findFirst({ where: { id: params.id, userId } }),
+    prisma.category.findMany({ where: { userId }, orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }] }),
+  ]);
+
+  if (!task) {
+    notFound();
+  }
+
   return (
     <main className="page">
       <h1>タスク編集</h1>
-      <p className="muted">id: {params.id}</p>
-      <p className="muted">Phase 2（タスクCRUD）で実装予定です。</p>
-      <Link className="btn" href={`/tasks/${params.id}`}>
-        タスク詳細に戻る
-      </Link>
+      <TaskForm
+        mode="edit"
+        taskId={task.id}
+        categories={categories}
+        initialValues={{
+          name: task.name,
+          categoryId: task.categoryId ?? "",
+          repeatUnit: task.repeatUnit,
+          repeatInterval: task.repeatInterval,
+          firstDueAt: formatDateOnly(task.firstDueAt),
+          notificationEnabled: task.notificationEnabled,
+          notificationTime: task.notificationTime,
+          preNotificationDays: task.preNotificationDays,
+          priority: task.priority,
+          memo: task.memo ?? "",
+        }}
+      />
     </main>
   );
 }

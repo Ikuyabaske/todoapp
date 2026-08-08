@@ -1,3 +1,3 @@
 // @upkeep/core: DB非依存の純粋ロジック置き場。
 // 日付計算(Phase 3)・通知判定(Phase 7/8)をここに実装していく。
-export {};
+export * from "./date/dateOnly";
