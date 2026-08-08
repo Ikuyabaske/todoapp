@@ -1,0 +1,57 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - TZ=Asia/Tokyo
+    depends_on:
+      db:
+        condition: service_healthy
+    # Phase1では動作確認のため localhost にのみ公開します。
+    # Phase9でcloudflaredを導入したら、このports指定は削除して
+    # 内部ネットワークのみ(expose)に切り替えます。
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  # 初回セットアップやスキーマ変更時に手動実行する一回限りのコンテナ。
+  # 使い方: docker compose run --rm migrate
+  # (Next.jsの実行用イメージ(app)には軽量化のためPrisma CLIを含めていないため、
+  #  ビルドの中間ステージ(build)を再利用してマイグレーション/seedを実行する)
+  migrate:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      target: build
+    profiles: ["tools"]
+    env_file: .env
+    environment:
+      - TZ=Asia/Tokyo
+    depends_on:
+      db:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command:
+      - "cd packages/db && npx prisma migrate deploy --schema prisma/schema.prisma && npx tsx prisma/seed.ts"
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - TZ=Asia/Tokyo
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # DBポートはコンテナ内ネットワークのみに閉じ、外部公開しません。
+
+volumes:
+  db_data:

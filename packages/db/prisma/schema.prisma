@@ -1,0 +1,126 @@
+// Upkeep - Prisma schema
+// 日付/時刻の扱い方針:
+//   - `@db.Date` のフィールドは「時刻を持たないカレンダー日付」専用。
+//     JSTの暦日として意味を持つ値のみを保持する（表示・通知計算時に
+//     packages/core/src/date/timezone.ts を介してAsia/Tokyoへ変換する）。
+//   - notificationTime は "HH:mm" 文字列としてJST壁時計を保持する
+//     （タイムゾーン変換の対象にしないことで曖昧さを避ける）。
+//   - snoozeUntil のみ実時刻(UTC, timestamptz)。通知タイミングの上書き専用で
+//     nextDueAt(本来の期限)は変更しない。
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum RepeatUnit {
+  DAY
+  WEEK
+  MONTH
+  YEAR
+}
+
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum NotificationType {
+  PRE // 事前通知（期限のNdays前）
+  DUE // 当日通知
+  OVERDUE // 期限超過の再通知（1日1回まで）
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  passwordHash      String
+  name              String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  categories        Category[]
+  tasks             Task[]
+  pushSubscriptions PushSubscription[]
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  tasks     Task[]
+
+  @@unique([userId, name])
+}
+
+model Task {
+  id                     String                 @id @default(cuid())
+  userId                 String
+  user                   User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                   String
+  categoryId             String?
+  category               Category?              @relation(fields: [categoryId], references: [id])
+  repeatUnit             RepeatUnit
+  repeatInterval         Int
+  firstDueAt             DateTime               @db.Date
+  nextDueAt              DateTime               @db.Date
+  lastCompletedAt        DateTime?              @db.Date
+  notificationEnabled    Boolean                @default(true)
+  notificationTime       String                 @default("09:00")
+  preNotificationDays    Int                    @default(0)
+  priority               Priority               @default(MEDIUM)
+  memo                   String?
+  snoozeUntil            DateTime?
+  isArchived             Boolean                @default(false)
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime               @updatedAt
+  histories              TaskHistory[]
+  notificationHistories  NotificationHistory[]
+
+  @@index([userId, isArchived])
+  @@index([userId, nextDueAt])
+}
+
+model TaskHistory {
+  id                String   @id @default(cuid())
+  taskId            String
+  task              Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  completedAt       DateTime @db.Date
+  dueAtAtCompletion DateTime @db.Date
+  note              String?
+  createdAt         DateTime @default(now())
+
+  @@index([taskId, completedAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model NotificationHistory {
+  id           String           @id @default(cuid())
+  taskId       String
+  task         Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  type         NotificationType
+  scheduledFor DateTime         @db.Date
+  sentAt       DateTime         @default(now())
+  success      Boolean          @default(true)
+  errorMessage String?
+
+  @@unique([taskId, type, scheduledFor])
+}

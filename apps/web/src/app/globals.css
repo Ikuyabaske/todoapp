@@ -1,0 +1,137 @@
+:root {
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-text: #1a1d23;
+  --color-muted: #6b7280;
+  --color-border: #e2e4e9;
+  --color-primary: #2563eb;
+  --color-primary-contrast: #ffffff;
+  --color-danger: #dc2626;
+  --color-warning: #d97706;
+  --color-success: #16a34a;
+  --radius: 12px;
+  --priority-high: #dc2626;
+  --priority-medium: #d97706;
+  --priority-low: #6b7280;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+
+.page {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 20px 16px 96px;
+}
+
+.lead {
+  color: var(--color-muted);
+  margin-top: -8px;
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin: 16px 0;
+}
+
+.status-list {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.home-groups {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.group-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+
+.group-card h3 {
+  margin: 0 0 4px;
+}
+
+.muted {
+  color: var(--color-muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  text-decoration: none;
+  font-size: 14px;
+  color: var(--color-text);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+}
+
+.form {
+  display: grid;
+  gap: 14px;
+  max-width: 360px;
+}
+
+.form label {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.form input,
+.form select,
+.form textarea {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  font-size: 15px;
+}
+
+.error-text {
+  color: var(--color-danger);
+  font-size: 13px;
+}

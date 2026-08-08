@@ -1,0 +1,27 @@
+node_modules/
+.env
+.env.local
+*.log
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Prisma
+packages/db/generated/
+
+# Build outputs
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+
+# Test coverage
+coverage/

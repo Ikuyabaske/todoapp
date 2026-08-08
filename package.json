@@ -1,0 +1,23 @@
+{
+  "name": "upkeep",
+  "private": true,
+  "version": "0.1.0",
+  "description": "定期メンテナンス管理 通知Webアプリ (Upkeep)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace apps/web",
+    "dev:scheduler": "npm run dev --workspace apps/scheduler",
+    "build:web": "npm run build --workspace apps/web",
+    "db:generate": "npm run generate --workspace packages/db",
+    "db:migrate:dev": "npm run migrate:dev --workspace packages/db",
+    "db:migrate:deploy": "npm run migrate --workspace packages/db",
+    "db:seed": "npm run seed --workspace packages/db",
+    "test": "npm run test --workspace packages/core"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
