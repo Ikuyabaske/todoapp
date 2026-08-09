@@ -1,10 +1,24 @@
 import Link from "next/link";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 export default function SettingsPage(): JSX.Element {
   return (
     <main className="page">
       <h1>設定</h1>
-      <p className="muted">通知設定（Push購読）はPhase 7で実装予定です。</p>
+
+      <section className="card">
+        <h2>アプリのインストール</h2>
+        <p className="muted">
+          ホーム画面に追加すると、アプリのようにフルスクリーンで起動でき、Push通知も受け取れるようになります。
+        </p>
+        <InstallPrompt />
+      </section>
+
+      <section className="card">
+        <h2>通知</h2>
+        <p className="muted">Push通知の購読設定はPhase 7で実装予定です。</p>
+      </section>
+
       <Link className="btn" href="/">
         ホームに戻る
       </Link>

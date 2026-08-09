@@ -73,6 +73,11 @@ npm run dev:web
 
 VAPIDキー・Cloudflare Tunnel Tokenの設定方法は、それぞれ実装が完了するPhase 7・Phase 9のタイミングで本READMEに追記します。
 
+## PWAとしてインストール
+
+ブラウザで開いた後、`/settings` 画面（または各ブラウザの標準メニュー）から「ホーム画面に追加」を行うと、
+アプリのようにフルスクリーン（standalone）で起動できるようになります。詳しい手順はPhase 10で本README に追記予定です。
+
 ## テスト
 
 日付計算ロジック（`packages/core`）はDB非依存のためユニットテストで検証できます。
@@ -91,7 +96,7 @@ npm run test --workspace packages/core
 - [x] Phase 3: 繰り返し計算
 - [x] Phase 4: 完了履歴・スヌーズ
 - [x] Phase 5: ホーム画面分類
-- [ ] Phase 6: PWA化
+- [x] Phase 6: PWA化
 - [ ] Phase 7: Web Push
 - [ ] Phase 8: scheduler
 - [ ] Phase 9: Cloudflare Tunnel
