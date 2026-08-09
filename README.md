@@ -73,6 +73,19 @@ npm run dev:web
 
 VAPIDキー・Cloudflare Tunnel Tokenの設定方法は、それぞれ実装が完了するPhase 7・Phase 9のタイミングで本READMEに追記します。
 
+## VAPIDキーの生成（Web Push用）
+
+Push通知にはVAPID鍵ペアが必要です。以下で生成し、`.env`の該当項目に設定してください。
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+出力された `publicKey` を `VAPID_PUBLIC_KEY` と `NEXT_PUBLIC_VAPID_PUBLIC_KEY` の両方に、
+`privateKey` を `VAPID_PRIVATE_KEY` に設定します。`NEXT_PUBLIC_VAPID_PUBLIC_KEY` は
+Next.jsのビルド時にクライアントJSへ埋め込まれるため、値を変更した場合は
+**必ず `docker compose build app` からやり直してください**（`up -d` だけでは反映されません）。
+
 ## PWAとしてインストール
 
 ブラウザで開いた後、`/settings` 画面（または各ブラウザの標準メニュー）から「ホーム画面に追加」を行うと、
@@ -97,7 +110,7 @@ npm run test --workspace packages/core
 - [x] Phase 4: 完了履歴・スヌーズ
 - [x] Phase 5: ホーム画面分類
 - [x] Phase 6: PWA化
-- [ ] Phase 7: Web Push
+- [x] Phase 7: Web Push
 - [ ] Phase 8: scheduler
 - [ ] Phase 9: Cloudflare Tunnel
 - [ ] Phase 10: セキュリティ・README・テスト

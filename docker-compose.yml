@@ -3,6 +3,10 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
+      # NEXT_PUBLIC_*系の環境変数はNext.jsのビルド時にJSへ埋め込まれるため、
+      # 実行時のenv_fileだけでは反映されない。buildのargsとして明示的に渡す。
+      args:
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
     restart: unless-stopped
     env_file: .env
     environment:
@@ -25,6 +29,9 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       target: build
+      # appと同じbuild argsを渡し、buildステージのDockerレイヤーキャッシュを共有する。
+      args:
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
     profiles: ["tools"]
     env_file: .env
     environment:

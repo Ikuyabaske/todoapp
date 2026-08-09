@@ -18,6 +18,10 @@ RUN npm install --workspaces --include-workspace-root
 
 # ---- build: Prisma Client生成 + Next.jsビルド ----
 FROM base AS build
+# NEXT_PUBLIC_*はNext.jsのビルド時にクライアントJSへ埋め込まれるため、
+# 実行時ではなくビルド時の環境変数として渡す必要がある。
+ARG NEXT_PUBLIC_VAPID_PUBLIC_KEY
+ENV NEXT_PUBLIC_VAPID_PUBLIC_KEY=$NEXT_PUBLIC_VAPID_PUBLIC_KEY
 COPY --from=deps /repo/node_modules ./node_modules
 COPY . .
 RUN npm run generate --workspace packages/db

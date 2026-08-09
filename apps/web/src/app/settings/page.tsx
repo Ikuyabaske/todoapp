@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { NotificationSettings } from "@/components/NotificationSettings";
 
 export default function SettingsPage(): JSX.Element {
   return (
@@ -16,7 +17,7 @@ export default function SettingsPage(): JSX.Element {
 
       <section className="card">
         <h2>通知</h2>
-        <p className="muted">Push通知の購読設定はPhase 7で実装予定です。</p>
+        <NotificationSettings />
       </section>
 
       <Link className="btn" href="/">

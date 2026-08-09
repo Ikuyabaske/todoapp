@@ -5,3 +5,5 @@ export * from "./date/recurrence";
 export * from "./date/timezone";
 export * from "./date/taskStatus";
 export * from "./notification/snooze";
+export * from "./notification/webPushClient";
+export * from "./notification/buildMessage";
