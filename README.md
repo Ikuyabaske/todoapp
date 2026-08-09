@@ -90,7 +90,7 @@ npm run test --workspace packages/core
 - [x] Phase 2: タスクCRUD
 - [x] Phase 3: 繰り返し計算
 - [x] Phase 4: 完了履歴・スヌーズ
-- [ ] Phase 5: ホーム画面分類
+- [x] Phase 5: ホーム画面分類
 - [ ] Phase 6: PWA化
 - [ ] Phase 7: Web Push
 - [ ] Phase 8: scheduler

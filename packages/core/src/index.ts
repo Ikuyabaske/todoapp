@@ -3,4 +3,5 @@
 export * from "./date/dateOnly";
 export * from "./date/recurrence";
 export * from "./date/timezone";
+export * from "./date/taskStatus";
 export * from "./notification/snooze";
