@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { formatDateOnly } from "@upkeep/core";
+import { formatDateOnly, formatJstDateTime } from "@upkeep/core";
 import { authOptions } from "@/server/auth";
 import { prisma } from "@upkeep/db";
 import { priorityLabel, repeatLabel } from "@/lib/format";
 import { DeleteTaskButton } from "@/components/DeleteTaskButton";
+import { CompleteTaskForm } from "@/components/CompleteTaskForm";
+import { SnoozeButton } from "@/components/SnoozeButton";
 
 export default async function TaskDetailPage({
   params,
@@ -69,13 +71,15 @@ export default async function TaskDetailPage({
         </div>
       </dl>
 
+      {task.snoozeUntil && task.snoozeUntil.getTime() > Date.now() && (
+        <p className="muted snooze-note">
+          🔔 次回の通知は {formatJstDateTime(task.snoozeUntil)}（JST）に延期されています（期限日自体は変更されません）
+        </p>
+      )}
+
       <div className="actions">
-        <button className="btn" type="button" disabled title="Phase 4で実装予定">
-          完了
-        </button>
-        <button className="btn" type="button" disabled title="Phase 4で実装予定">
-          あとで
-        </button>
+        <CompleteTaskForm taskId={task.id} />
+        <SnoozeButton taskId={task.id} />
         <Link className="btn" href={`/tasks/${task.id}/edit`}>
           編集
         </Link>

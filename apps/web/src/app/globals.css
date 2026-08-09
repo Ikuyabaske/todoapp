@@ -249,3 +249,29 @@ a {
   border-color: var(--color-danger);
   background: transparent;
 }
+
+.complete-form {
+  align-items: center;
+}
+
+.snooze-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  display: grid;
+  gap: 8px;
+  max-width: 320px;
+}
+
+.snooze-panel select,
+.snooze-panel input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+}
+
+.snooze-note {
+  font-size: 12px;
+  color: var(--color-muted);
+}

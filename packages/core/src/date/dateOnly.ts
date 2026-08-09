@@ -19,3 +19,10 @@ export function parseDateOnly(value: string): Date {
 export function formatDateOnly(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
+
+/** "YYYY-MM-DD" にdays日を加算(負数も可)した結果を "YYYY-MM-DD" で返す。 */
+export function shiftDateOnly(value: string, days: number): string {
+  const date = parseDateOnly(value);
+  date.setUTCDate(date.getUTCDate() + days);
+  return formatDateOnly(date);
+}
