@@ -10,6 +10,8 @@ import {
 import { ensureWebPushConfigured } from "./webPush";
 import { logger } from "./logger";
 
+const MAX_NOTIFICATION_ATTEMPTS = 3;
+
 /**
  * 1サイクル分の通知チェック処理（8章の仕様）。
  * 通知対象タスクを検索 → 送信要否を判定 → 未送信ならPush送信 → 送信履歴を保存、を行う。
@@ -54,7 +56,7 @@ async function processTask(task: Task, now: Date): Promise<void> {
   // (taskId, type, scheduledFor)であり、これは主にログの静音化・無駄なPush呼び出し
   // 回避のための事前チェックにすぎない。
   const scheduledForDate = parseDateOnly(decision.scheduledFor);
-  const alreadySent = await prisma.notificationHistory.findUnique({
+  const existingHistory = await prisma.notificationHistory.findUnique({
     where: {
       taskId_type_scheduledFor: {
         taskId: task.id,
@@ -63,7 +65,10 @@ async function processTask(task: Task, now: Date): Promise<void> {
       },
     },
   });
-  if (alreadySent) {
+  if (
+    existingHistory?.success ||
+    (existingHistory?.attemptCount ?? 0) >= MAX_NOTIFICATION_ATTEMPTS
+  ) {
     return;
   }
 
@@ -72,6 +77,7 @@ async function processTask(task: Task, now: Date): Promise<void> {
     kind: decision.kind,
     taskName: task.name,
     days: decision.days,
+    priority: task.priority,
   });
 
   let successCount = 0;
@@ -102,12 +108,26 @@ async function processTask(task: Task, now: Date): Promise<void> {
   // ユニーク制約(taskId, type, scheduledFor)により、同一タスク・同一種別・
   // 同一日の重複INSERTはDBレベルで確実に防止される（重複通知防止の最終防波堤）。
   try {
-    await prisma.notificationHistory.create({
-      data: {
+    await prisma.notificationHistory.upsert({
+      where: {
+        taskId_type_scheduledFor: {
+          taskId: task.id,
+          type: decision.kind,
+          scheduledFor: scheduledForDate,
+        },
+      },
+      create: {
         taskId: task.id,
         type: decision.kind,
         scheduledFor: scheduledForDate,
         success,
+        attemptCount: 1,
+        errorMessage: success ? null : buildErrorMessage(subscriptions.length, expiredCount, lastError),
+      },
+      update: {
+        success,
+        attemptCount: { increment: 1 },
+        sentAt: new Date(),
         errorMessage: success ? null : buildErrorMessage(subscriptions.length, expiredCount, lastError),
       },
     });
