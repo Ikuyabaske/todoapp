@@ -1,0 +1,7 @@
+# 本プロジェクトはLinuxサーバーへのデプロイを前提とするため、
+# シェルスクリプト等は改行コードを常にLFに固定する
+# (Windows環境でのチェックアウト時にautocrlfでCRLF化されるのを防ぐ)。
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
