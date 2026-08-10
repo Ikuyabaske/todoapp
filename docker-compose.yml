@@ -43,6 +43,21 @@ services:
     command:
       - "cd packages/db && npx prisma migrate deploy --schema prisma/schema.prisma && npx tsx prisma/seed.ts"
 
+  # 定期的に通知対象タスクをチェックし、Web Pushを送信する常駐プロセス。
+  # Next.js(app)とは別コンテナで動かすことで、通知処理の異常がWeb画面の
+  # 可用性に影響しないようにする。
+  scheduler:
+    build:
+      context: .
+      dockerfile: apps/scheduler/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - TZ=Asia/Tokyo
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: postgres:16-alpine
     restart: unless-stopped

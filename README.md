@@ -111,6 +111,6 @@ npm run test --workspace packages/core
 - [x] Phase 5: ホーム画面分類
 - [x] Phase 6: PWA化
 - [x] Phase 7: Web Push
-- [ ] Phase 8: scheduler
+- [x] Phase 8: scheduler
 - [ ] Phase 9: Cloudflare Tunnel
 - [ ] Phase 10: セキュリティ・README・テスト

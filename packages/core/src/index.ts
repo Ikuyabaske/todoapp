@@ -7,3 +7,4 @@ export * from "./date/taskStatus";
 export * from "./notification/snooze";
 export * from "./notification/webPushClient";
 export * from "./notification/buildMessage";
+export * from "./notification/decide";
