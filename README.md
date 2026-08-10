@@ -86,6 +86,30 @@ npx web-push generate-vapid-keys
 Next.jsのビルド時にクライアントJSへ埋め込まれるため、値を変更した場合は
 **必ず `docker compose build app` からやり直してください**（`up -d` だけでは反映されません）。
 
+## Cloudflare Tunnel設定方法
+
+ルーターのポート開放を一切行わず、Cloudflare Tunnel経由でHTTPS公開します。
+
+1. [Cloudflare Zero Trustダッシュボード](https://one.dash.cloudflare.com/) にログイン（Cloudflareに登録済みの独自ドメインが必要です）
+2. **Networks → Tunnels → Create a tunnel** を選択し、トンネル名（例: `upkeep`）を入力
+3. 接続方式は **Docker** を選択すると、`TUNNEL_TOKEN` を含む起動コマンドが表示されるので、
+   トークン部分（`--token` の後の文字列）だけをコピーする
+4. `.env` の `CLOUDFLARE_TUNNEL_TOKEN` に貼り付ける
+5. トンネル作成画面のまま **Public Hostname** タブで以下を設定する
+   - Subdomain/Domain: 公開したいドメイン（例: `tasks.example.com`）
+   - Service Type: `HTTP`
+   - URL: `app:3000`（docker-compose内のサービス名とポート。DNSレコードはCloudflareが自動作成）
+6. サーバー側で起動する
+
+   ```bash
+   docker compose up -d
+   ```
+
+7. `https://tasks.example.com`（設定したドメイン）にアクセスできれば成功
+
+`CLOUDFLARE_TUNNEL_TOKEN` が未設定の場合、`cloudflared` コンテナは起動に失敗し再起動を繰り返しますが、
+`app`/`db`/`scheduler` の動作には影響しません。ローカル開発時はそのままで問題ありません。
+
 ## PWAとしてインストール
 
 ブラウザで開いた後、`/settings` 画面（または各ブラウザの標準メニュー）から「ホーム画面に追加」を行うと、
@@ -112,5 +136,5 @@ npm run test --workspace packages/core
 - [x] Phase 6: PWA化
 - [x] Phase 7: Web Push
 - [x] Phase 8: scheduler
-- [ ] Phase 9: Cloudflare Tunnel
+- [x] Phase 9: Cloudflare Tunnel
 - [ ] Phase 10: セキュリティ・README・テスト

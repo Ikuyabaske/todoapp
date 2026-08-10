@@ -14,9 +14,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # Phase1では動作確認のため localhost にのみ公開します。
-    # Phase9でcloudflaredを導入したら、このports指定は削除して
-    # 内部ネットワークのみ(expose)に切り替えます。
+    # 127.0.0.1のみへのバインドのため、ルーターのポート開放とは無関係かつ
+    # LAN外には公開されない。サーバー上での動作確認(curl等)用に維持している。
+    # 外部公開は下記cloudflaredサービス経由のCloudflare Tunnelのみで行う。
     ports:
       - "127.0.0.1:3000:3000"
 
@@ -57,6 +57,21 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  # Cloudflare Tunnel: ルーターのポート開放を一切行わずに、Cloudflare経由でHTTPS公開する。
+  # トークン方式のトンネルのため、公開ホスト名(例: tasks.example.com)と
+  # 接続先(http://app:3000)の対応づけはCloudflare Zero Trustダッシュボード側の
+  # Public Hostname設定で行い、ローカルにconfig.ymlは持たない。
+  # CLOUDFLARE_TUNNEL_TOKENが未設定の場合はこのコンテナは起動に失敗し続けるが、
+  # app/db/schedulerの動作には影響しない(ローカル開発時は無視して構わない)。
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - app
 
   db:
     image: postgres:16-alpine
