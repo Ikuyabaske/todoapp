@@ -2,6 +2,10 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { prisma } from "@upkeep/db";
+import { isRateLimited } from "@/server/rateLimit";
+
+const LOGIN_ATTEMPT_LIMIT = 10;
+const LOGIN_ATTEMPT_WINDOW_MS = 5 * 60_000; // 5分
 
 /**
  * 認証設定 (Auth.js / NextAuth v4, Credentials Provider)。
@@ -29,6 +33,13 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials.password) {
+          return null;
+        }
+
+        // ブルートフォース対策: メールアドレス単位で試行回数を制限する。
+        // 存在有無に関わらずnullを返すことでアカウント列挙を防いでいるのと同様、
+        // ここでも制限超過時は理由を出さずnullで統一する。
+        if (isRateLimited(`login:${credentials.email}`, LOGIN_ATTEMPT_LIMIT, LOGIN_ATTEMPT_WINDOW_MS)) {
           return null;
         }
 

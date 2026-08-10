@@ -25,3 +25,6 @@ Thumbs.db
 
 # Test coverage
 coverage/
+
+# DBバックアップ(scripts/backup.sh の出力先)
+backups/

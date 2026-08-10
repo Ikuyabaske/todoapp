@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { NotFoundError, UnauthorizedError } from "@/server/errors";
+import { NotFoundError, RateLimitError, UnauthorizedError } from "@/server/errors";
 
 /**
  * API Route Handler共通のエラーハンドリング。
@@ -14,6 +14,9 @@ export function handleApiError(error: unknown): NextResponse {
   }
   if (error instanceof NotFoundError) {
     return NextResponse.json({ error: error.message }, { status: 404 });
+  }
+  if (error instanceof RateLimitError) {
+    return NextResponse.json({ error: error.message }, { status: 429 });
   }
   if (error instanceof ZodError) {
     return NextResponse.json(
