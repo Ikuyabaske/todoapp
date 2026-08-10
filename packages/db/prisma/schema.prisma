@@ -120,6 +120,7 @@ model NotificationHistory {
   scheduledFor DateTime         @db.Date
   sentAt       DateTime         @default(now())
   success      Boolean          @default(true)
+  attemptCount Int              @default(1)
   errorMessage String?
 
   @@unique([taskId, type, scheduledFor])

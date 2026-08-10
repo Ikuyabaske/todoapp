@@ -21,6 +21,7 @@ export default async function HomePage(): Promise<JSX.Element> {
   // 全タスクをあらかじめnextDueAt昇順で取得しているため、各グループ内の順序
   // (期限切れは古い順=超過日数が多い順、今後は近い順)もそのまま維持される。
   const today: TaskListItemData[] = [];
+  const tomorrow: TaskListItemData[] = [];
   const overdue: TaskListItemData[] = [];
   const upcoming: TaskListItemData[] = [];
 
@@ -28,6 +29,7 @@ export default async function HomePage(): Promise<JSX.Element> {
     const status = classifyTaskStatus(formatDateOnly(task.nextDueAt));
     if (status.group === "TODAY") today.push(task);
     else if (status.group === "OVERDUE") overdue.push(task);
+    else if (status.diffDays === 1) tomorrow.push(task);
     else upcoming.push(task);
   }
 
@@ -38,7 +40,8 @@ export default async function HomePage(): Promise<JSX.Element> {
 
       <TaskGroup title="今日" tasks={today} emptyText="今日が期限のタスクはありません。" />
       <TaskGroup title="期限切れ" tasks={overdue} emptyText="期限切れのタスクはありません。" />
-      <TaskGroup title="今後" tasks={upcoming} emptyText="今後のタスクはありません。" limit={10} />
+      <TaskGroup title="明日" tasks={tomorrow} emptyText="明日が期限のタスクはありません。" />
+      <TaskGroup title="今後" tasks={upcoming} emptyText="明後日以降のタスクはありません。" limit={10} />
 
       <div className="actions">
         <Link className="btn" href="/tasks">

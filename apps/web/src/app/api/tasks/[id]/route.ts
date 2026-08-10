@@ -58,7 +58,11 @@ export async function PATCH(
     }
     if (body.repeatUnit !== undefined) data.repeatUnit = body.repeatUnit;
     if (body.repeatInterval !== undefined) data.repeatInterval = body.repeatInterval;
-    if (body.firstDueAt !== undefined) data.firstDueAt = parseDateOnly(body.firstDueAt);
+    if (body.firstDueAt !== undefined) {
+      const dueAt = parseDateOnly(body.firstDueAt);
+      data.firstDueAt = dueAt;
+      data.nextDueAt = dueAt;
+    }
     if (body.notificationEnabled !== undefined) data.notificationEnabled = body.notificationEnabled;
     if (body.notificationTime !== undefined) data.notificationTime = body.notificationTime;
     if (body.preNotificationDays !== undefined) data.preNotificationDays = body.preNotificationDays;
@@ -79,8 +83,15 @@ export async function DELETE(
   try {
     const userId = await requireUserId();
     await assertTaskOwnership(userId, params.id);
-    // TaskHistory/NotificationHistoryはonDelete: Cascadeのため自動的に削除される。
-    await prisma.task.delete({ where: { id: params.id } });
+    // 完了・通知履歴を保持したまま、一覧と通知対象から除外する。
+    await prisma.task.update({
+      where: { id: params.id },
+      data: {
+        isArchived: true,
+        notificationEnabled: false,
+        snoozeUntil: null,
+      },
+    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     return handleApiError(error);
