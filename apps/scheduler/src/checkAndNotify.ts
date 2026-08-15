@@ -3,10 +3,9 @@ import {
   buildNotificationMessage,
   decideNotification,
   formatDateOnly,
-  isExpiredSubscriptionError,
   parseDateOnly,
-  sendPushNotification,
 } from "@upkeep/core";
+import { isExpiredSubscriptionError, sendPushNotification } from "@upkeep/core/server";
 import { ensureWebPushConfigured } from "./webPush";
 import { logger } from "./logger";
 

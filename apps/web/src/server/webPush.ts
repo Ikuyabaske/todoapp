@@ -1,4 +1,4 @@
-import { configureWebPush } from "@upkeep/core";
+import { configureWebPush } from "@upkeep/core/server";
 
 let initialized = false;
 

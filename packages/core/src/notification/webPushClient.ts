@@ -2,6 +2,9 @@
 // web-push送信処理はapps/web(テスト送信)とapps/scheduler(Phase8の本番送信)の
 // 両方で全く同じVAPID設定・送信処理・エラー判定を必要とするため、
 // 重複実装を避ける目的でここに薄いラッパーとして置いている。
+// Node専用のため index.ts のバレルには含めず、"@upkeep/core/server" 経由でのみexportする
+// （apps/schedulerはNext.jsのバンドラを介さずtsxで直接実行するため、
+// "server-only" パッケージはここでは使えない＝プレーンなNode実行時に無条件でthrowしてしまう）。
 import webpush from "web-push";
 
 export interface VapidConfig {

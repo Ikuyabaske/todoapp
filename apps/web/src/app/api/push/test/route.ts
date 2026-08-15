@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@upkeep/db";
-import { buildNotificationMessage, isExpiredSubscriptionError, sendPushNotification } from "@upkeep/core";
+import { buildNotificationMessage } from "@upkeep/core";
+import { isExpiredSubscriptionError, sendPushNotification } from "@upkeep/core/server";
 import { requireUserId } from "@/server/session";
 import { handleApiError } from "@/server/api-error";
 import { ensureWebPushConfigured } from "@/server/webPush";
