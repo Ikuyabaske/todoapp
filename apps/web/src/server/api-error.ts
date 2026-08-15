@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { ZodError } from "zod";
-import { NotFoundError, RateLimitError, UnauthorizedError } from "@/server/errors";
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  RateLimitError,
+  UnauthorizedError,
+} from "@/server/errors";
 
 /**
  * API Route Handler共通のエラーハンドリング。
@@ -12,8 +18,14 @@ export function handleApiError(error: unknown): NextResponse {
   if (error instanceof UnauthorizedError) {
     return NextResponse.json({ error: error.message }, { status: 401 });
   }
+  if (error instanceof ForbiddenError) {
+    return NextResponse.json({ error: error.message }, { status: 403 });
+  }
   if (error instanceof NotFoundError) {
     return NextResponse.json({ error: error.message }, { status: 404 });
+  }
+  if (error instanceof ConflictError) {
+    return NextResponse.json({ error: error.message }, { status: 409 });
   }
   if (error instanceof RateLimitError) {
     return NextResponse.json({ error: error.message }, { status: 429 });

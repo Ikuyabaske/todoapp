@@ -15,6 +15,6 @@ export default withAuth({
 // requireUserId()がJSON 401を返す方式に統一する（多層防御は維持される）。
 export const config = {
   matcher: [
-    "/((?!api|login|manifest\\.webmanifest|sw\\.js|icons|_next/static|_next/image|favicon\\.ico).*)",
+    "/((?!api|login|signup|manifest\\.webmanifest|sw\\.js|icons|_next/static|_next/image|favicon\\.ico).*)",
   ],
 };

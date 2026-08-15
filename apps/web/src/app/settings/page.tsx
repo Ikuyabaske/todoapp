@@ -1,11 +1,22 @@
 import Link from "next/link";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/server/auth";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { NotificationSettings } from "@/components/NotificationSettings";
+import { LogoutButton } from "@/components/LogoutButton";
 
-export default function SettingsPage(): JSX.Element {
+export default async function SettingsPage(): Promise<JSX.Element> {
+  const session = await getServerSession(authOptions);
+
   return (
     <main className="page">
       <h1>設定</h1>
+
+      <section className="card">
+        <h2>アカウント</h2>
+        <p className="muted">{session?.user?.email}</p>
+        <LogoutButton />
+      </section>
 
       <section className="card">
         <h2>アプリのインストール</h2>

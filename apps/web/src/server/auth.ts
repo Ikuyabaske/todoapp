@@ -10,13 +10,12 @@ const LOGIN_ATTEMPT_WINDOW_MS = 5 * 60_000; // 5分
 /**
  * 認証設定 (Auth.js / NextAuth v4, Credentials Provider)。
  *
- * MVPでは自宅サーバーの単一ユーザー運用を想定し、公開の会員登録画面は
- * 用意しない。初期ユーザーは `npm run db:seed` が .env の
- * ADMIN_EMAIL / ADMIN_PASSWORD から作成する。
+ * 初期ユーザーは `npm run db:seed` が .env の ADMIN_EMAIL / ADMIN_PASSWORD
+ * から作成する。それ以降のユーザーは /signup (招待コード必須、
+ * apps/web/src/app/api/auth/signup/route.ts) から自己登録できる。
  *
  * すべてのTask/Category等はuserId外部キーで分離されているため、
- * 将来複数ユーザー化する際もこのCredentials認証の上に
- * 追加のProviderを載せるだけで拡張できる。
+ * 各ユーザーは自分のデータのみを参照・操作する。
  */
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
