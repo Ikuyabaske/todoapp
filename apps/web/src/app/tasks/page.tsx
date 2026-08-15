@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/server/auth";
 import { prisma } from "@upkeep/db";
 import { TaskListView } from "@/components/TaskListView";
+import { TaskCsvImportButton } from "@/components/TaskCsvImportButton";
 
 export default async function TasksPage(): Promise<JSX.Element> {
   const session = await getServerSession(authOptions);
@@ -24,6 +25,10 @@ export default async function TasksPage(): Promise<JSX.Element> {
         <Link className="btn btn-primary" href="/tasks/new">
           + タスクを登録
         </Link>
+        <a className="btn btn-xs" href="/api/tasks/export">
+          CSVエクスポート
+        </a>
+        <TaskCsvImportButton />
         <Link className="btn" href="/">
           ホームに戻る
         </Link>
