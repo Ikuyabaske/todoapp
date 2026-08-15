@@ -14,7 +14,13 @@ const PRESET_LABELS = {
 
 type SnoozePreset = keyof typeof PRESET_LABELS;
 
-export function SnoozeButton({ taskId }: { taskId: string }): JSX.Element {
+export function SnoozeButton({
+  taskId,
+  compact = false,
+}: {
+  taskId: string;
+  compact?: boolean;
+}): JSX.Element {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [preset, setPreset] = useState<SnoozePreset>("TOMORROW");
@@ -50,7 +56,11 @@ export function SnoozeButton({ taskId }: { taskId: string }): JSX.Element {
 
   if (!open) {
     return (
-      <button className="btn" type="button" onClick={() => setOpen(true)}>
+      <button
+        className={`btn${compact ? " btn-sm" : ""}`}
+        type="button"
+        onClick={() => setOpen(true)}
+      >
         あとで
       </button>
     );

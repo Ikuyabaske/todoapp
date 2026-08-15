@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/server/auth";
 import { prisma } from "@upkeep/db";
-import { TaskListItem } from "@/components/TaskListItem";
+import { TaskListView } from "@/components/TaskListView";
 
 export default async function TasksPage(): Promise<JSX.Element> {
   const session = await getServerSession(authOptions);
@@ -18,28 +18,16 @@ export default async function TasksPage(): Promise<JSX.Element> {
 
   return (
     <main className="page">
-      <h1>タスク一覧</h1>
+      <TaskListView tasks={tasks} />
+
       <div className="actions">
         <Link className="btn btn-primary" href="/tasks/new">
           + タスクを登録
         </Link>
+        <Link className="btn" href="/">
+          ホームに戻る
+        </Link>
       </div>
-
-      {tasks.length === 0 ? (
-        <p className="muted">登録されているタスクはまだありません。</p>
-      ) : (
-        <ul className="task-list">
-          {tasks.map((task) => (
-            <li key={task.id}>
-              <TaskListItem task={task} showStatus />
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <Link className="btn" href="/">
-        ホームに戻る
-      </Link>
     </main>
   );
 }

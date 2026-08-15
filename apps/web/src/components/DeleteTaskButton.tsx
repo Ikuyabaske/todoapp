@@ -3,7 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export function DeleteTaskButton({ taskId, taskName }: { taskId: string; taskName: string }): JSX.Element {
+export function DeleteTaskButton({
+  taskId,
+  taskName,
+  compact = false,
+}: {
+  taskId: string;
+  taskName: string;
+  compact?: boolean;
+}): JSX.Element {
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
@@ -26,7 +34,12 @@ export function DeleteTaskButton({ taskId, taskName }: { taskId: string; taskNam
   }
 
   return (
-    <button className="btn btn-danger" type="button" onClick={handleDelete} disabled={pending}>
+    <button
+      className={`btn btn-danger${compact ? " btn-sm" : ""}`}
+      type="button"
+      onClick={handleDelete}
+      disabled={pending}
+    >
       {pending ? "削除中..." : "削除"}
     </button>
   );
