@@ -11,7 +11,7 @@ export interface TaskFormCategory {
 export interface TaskFormValues {
   name: string;
   categoryId: string;
-  repeatUnit: "DAY" | "WEEK" | "MONTH" | "YEAR";
+  repeatUnit: "ONCE" | "DAY" | "WEEK" | "MONTH" | "YEAR";
   repeatInterval: number;
   firstDueAt: string;
   notificationEnabled: boolean;
@@ -62,7 +62,7 @@ export function TaskForm({ categories, initialValues, mode, taskId }: TaskFormPr
       name: values.name,
       categoryId: values.categoryId || null,
       repeatUnit: values.repeatUnit,
-      repeatInterval: Number(values.repeatInterval),
+      repeatInterval: values.repeatUnit === "ONCE" ? 1 : Number(values.repeatInterval),
       firstDueAt: values.firstDueAt,
       notificationEnabled: values.notificationEnabled,
       notificationTime: values.notificationTime,
@@ -86,8 +86,7 @@ export function TaskForm({ categories, initialValues, mode, taskId }: TaskFormPr
         return;
       }
 
-      const body: { task: { id: string } } = await res.json();
-      router.push(`/tasks/${body.task.id}`);
+      router.push("/tasks");
       router.refresh();
     } catch {
       setError("通信エラーが発生しました。ネットワークをご確認ください。");
@@ -104,8 +103,24 @@ export function TaskForm({ categories, initialValues, mode, taskId }: TaskFormPr
     }
   }
 
+  function setRepeatPreset(repeatUnit: TaskFormValues["repeatUnit"], repeatInterval = 1): void {
+    setValues((prev) => ({ ...prev, repeatUnit, repeatInterval }));
+  }
+
+  const isHourlyReminderTask =
+    values.notificationEnabled && values.repeatUnit === "DAY" && Number(values.repeatInterval) === 1;
+
   return (
     <form className="form" onSubmit={handleSubmit}>
+      <div className="form-top-actions">
+        <button className="btn btn-primary" type="submit" disabled={submitting}>
+          {submitting ? "保存中..." : mode === "create" ? "登録" : "保存する"}
+        </button>
+        <button className="btn" type="button" onClick={handleCancel} disabled={submitting}>
+          キャンセル
+        </button>
+      </div>
+
       <label>
         タスク名
         <input
@@ -131,6 +146,36 @@ export function TaskForm({ categories, initialValues, mode, taskId }: TaskFormPr
 
       <label>
         繰り返し
+        <div className="preset-row" aria-label="繰り返しプリセット">
+          <button
+            type="button"
+            className={`preset-chip${values.repeatUnit === "ONCE" ? " active" : ""}`}
+            onClick={() => setRepeatPreset("ONCE")}
+          >
+            一回のみ
+          </button>
+          <button
+            type="button"
+            className={`preset-chip${values.repeatUnit === "DAY" && values.repeatInterval === 1 ? " active" : ""}`}
+            onClick={() => setRepeatPreset("DAY")}
+          >
+            毎日
+          </button>
+          <button
+            type="button"
+            className={`preset-chip${values.repeatUnit === "WEEK" && values.repeatInterval === 1 ? " active" : ""}`}
+            onClick={() => setRepeatPreset("WEEK")}
+          >
+            毎週
+          </button>
+          <button
+            type="button"
+            className={`preset-chip${values.repeatUnit === "MONTH" && values.repeatInterval === 1 ? " active" : ""}`}
+            onClick={() => setRepeatPreset("MONTH")}
+          >
+            毎月
+          </button>
+        </div>
         <div className="inline-fields">
           <input
             type="number"
@@ -139,11 +184,13 @@ export function TaskForm({ categories, initialValues, mode, taskId }: TaskFormPr
             required
             value={values.repeatInterval}
             onChange={(e) => update("repeatInterval", Number(e.target.value))}
+            disabled={values.repeatUnit === "ONCE"}
           />
           <select
             value={values.repeatUnit}
             onChange={(e) => update("repeatUnit", e.target.value as TaskFormValues["repeatUnit"])}
           >
+            <option value="ONCE">繰り返さない</option>
             <option value="DAY">日ごと</option>
             <option value="WEEK">週ごと</option>
             <option value="MONTH">か月ごと</option>
@@ -201,6 +248,9 @@ export function TaskForm({ categories, initialValues, mode, taskId }: TaskFormPr
               onChange={(e) => update("notificationTime", e.target.value)}
               disabled={!values.notificationEnabled}
             />
+            {isHourlyReminderTask && (
+              <span className="setting-note">通知時刻後は完了まで1時間ごとに通知します。</span>
+            )}
           </label>
 
           <label>
@@ -228,15 +278,6 @@ export function TaskForm({ categories, initialValues, mode, taskId }: TaskFormPr
       )}
 
       {error && <p className="error-text">{error}</p>}
-
-      <div className="actions">
-        <button className="btn btn-primary" type="submit" disabled={submitting}>
-          {submitting ? "保存中..." : mode === "create" ? "登録する" : "保存する"}
-        </button>
-        <button className="btn" type="button" onClick={handleCancel} disabled={submitting}>
-          登録をやめる
-        </button>
-      </div>
     </form>
   );
 }

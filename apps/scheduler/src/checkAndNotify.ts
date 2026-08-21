@@ -1,4 +1,5 @@
-import { prisma, type Task } from "@upkeep/db";
+import { randomUUID } from "node:crypto";
+import { Prisma, prisma, type Task } from "@upkeep/db";
 import {
   buildNotificationMessage,
   decideNotification,
@@ -39,6 +40,8 @@ async function processTask(task: Task, now: Date): Promise<void> {
   const decision = decideNotification(
     {
       nextDueAt: formatDateOnly(task.nextDueAt),
+      repeatUnit: task.repeatUnit,
+      repeatInterval: task.repeatInterval,
       notificationEnabled: task.notificationEnabled,
       notificationTime: task.notificationTime,
       preNotificationDays: task.preNotificationDays,
@@ -52,18 +55,15 @@ async function processTask(task: Task, now: Date): Promise<void> {
   }
 
   // 重複送信防止の一次チェック(存在確認)。最終防波堤はDBのユニーク制約
-  // (taskId, type, scheduledFor)であり、これは主にログの静音化・無駄なPush呼び出し
-  // 回避のための事前チェックにすぎない。
+  // (taskId, type, scheduledFor, reminderSlot)であり、これは主にログの静音化・
+  // 無駄なPush呼び出し回避のための事前チェックにすぎない。
   const scheduledForDate = parseDateOnly(decision.scheduledFor);
-  const existingHistory = await prisma.notificationHistory.findUnique({
-    where: {
-      taskId_type_scheduledFor: {
-        taskId: task.id,
-        type: decision.kind,
-        scheduledFor: scheduledForDate,
-      },
-    },
-  });
+  const existingHistory = await findNotificationHistory(
+    task.id,
+    decision.kind,
+    decision.scheduledFor,
+    decision.reminderSlot
+  );
   if (
     existingHistory?.success ||
     (existingHistory?.attemptCount ?? 0) >= MAX_NOTIFICATION_ATTEMPTS
@@ -104,31 +104,16 @@ async function processTask(task: Task, now: Date): Promise<void> {
 
   const success = subscriptions.length > 0 && successCount > 0;
 
-  // ユニーク制約(taskId, type, scheduledFor)により、同一タスク・同一種別・
-  // 同一日の重複INSERTはDBレベルで確実に防止される（重複通知防止の最終防波堤）。
+  // ユニーク制約(taskId, type, scheduledFor, reminderSlot)により、同一通知スロットの
+  // 重複INSERTはDBレベルで確実に防止される（重複通知防止の最終防波堤）。
   try {
-    await prisma.notificationHistory.upsert({
-      where: {
-        taskId_type_scheduledFor: {
-          taskId: task.id,
-          type: decision.kind,
-          scheduledFor: scheduledForDate,
-        },
-      },
-      create: {
-        taskId: task.id,
-        type: decision.kind,
-        scheduledFor: scheduledForDate,
-        success,
-        attemptCount: 1,
-        errorMessage: success ? null : buildErrorMessage(subscriptions.length, expiredCount, lastError),
-      },
-      update: {
-        success,
-        attemptCount: { increment: 1 },
-        sentAt: new Date(),
-        errorMessage: success ? null : buildErrorMessage(subscriptions.length, expiredCount, lastError),
-      },
+    await upsertNotificationHistory({
+      taskId: task.id,
+      type: decision.kind,
+      scheduledFor: scheduledForDate,
+      reminderSlot: decision.reminderSlot,
+      success,
+      errorMessage: success ? null : buildErrorMessage(subscriptions.length, expiredCount, lastError),
     });
   } catch (error) {
     // 極めて短時間に2回チェックが走った場合などのユニーク制約違反はここで握りつぶす。
@@ -143,7 +128,58 @@ async function processTask(task: Task, now: Date): Promise<void> {
   }
 
   logger.info(
-    `通知処理完了: taskId=${task.id} name=${task.name} kind=${decision.kind} success=${success} 送信=${successCount}/${subscriptions.length}`
+    `通知処理完了: taskId=${task.id} name=${task.name} kind=${decision.kind} slot=${decision.reminderSlot} success=${success} 送信=${successCount}/${subscriptions.length}`
+  );
+}
+
+async function findNotificationHistory(
+  taskId: string,
+  type: string,
+  scheduledFor: string,
+  reminderSlot: string
+): Promise<{ success: boolean; attemptCount: number } | null> {
+  const rows = await prisma.$queryRaw<{ success: boolean; attemptCount: number }[]>`
+    SELECT "success", "attemptCount"
+    FROM "NotificationHistory"
+    WHERE "taskId" = ${taskId}
+      AND "type" = ${type}::"NotificationType"
+      AND "scheduledFor" = ${scheduledFor}::date
+      AND "reminderSlot" = ${reminderSlot}
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+}
+
+async function upsertNotificationHistory(input: {
+  taskId: string;
+  type: string;
+  scheduledFor: Date;
+  reminderSlot: string;
+  success: boolean;
+  errorMessage: string | null;
+}): Promise<void> {
+  await prisma.$executeRaw(
+    Prisma.sql`
+      INSERT INTO "NotificationHistory"
+        ("id", "taskId", "type", "scheduledFor", "reminderSlot", "success", "attemptCount", "errorMessage")
+      VALUES
+        (
+          ${randomUUID()},
+          ${input.taskId},
+          ${input.type}::"NotificationType",
+          ${input.scheduledFor},
+          ${input.reminderSlot},
+          ${input.success},
+          1,
+          ${input.errorMessage}
+        )
+      ON CONFLICT ("taskId", "type", "scheduledFor", "reminderSlot")
+      DO UPDATE SET
+        "success" = EXCLUDED."success",
+        "attemptCount" = "NotificationHistory"."attemptCount" + 1,
+        "sentAt" = NOW(),
+        "errorMessage" = EXCLUDED."errorMessage"
+    `
   );
 }
 

@@ -11,6 +11,11 @@ services:
     env_file: .env
     environment:
       - TZ=Asia/Tokyo
+      # DockerはコンテナIDをHOSTNAME環境変数として自動設定するが、
+      # Next.js standaloneサーバーはこれをbind先ホストとして使うため、
+      # 複数ネットワーク(default + sso-net)に接続していると片方のIPにしか
+      # バインドされなくなる。明示的に0.0.0.0を指定して全インターフェースで待ち受ける。
+      - HOSTNAME=0.0.0.0
     depends_on:
       db:
         condition: service_healthy
@@ -19,6 +24,14 @@ services:
     # 外部公開は下記cloudflaredサービス経由のCloudflare Tunnelのみで行う。
     ports:
       - "127.0.0.1:3000:3000"
+    # home-portal(SSO連携先)がホストのネットワークインターフェースを経由せず
+    # コンテナ間通信でセッション確認(/api/auth/session)を呼べるようにするための
+    # 専用ネットワーク。ホストの127.0.0.1バインドはそのまま維持する。
+    networks:
+      default: {}
+      sso-net:
+        aliases:
+          - todoapp-web
 
   # 初回セットアップやスキーマ変更時に手動実行する一回限りのコンテナ。
   # 使い方: docker compose run --rm migrate
@@ -92,3 +105,7 @@ services:
 
 volumes:
   db_data:
+
+networks:
+  sso-net:
+    external: true

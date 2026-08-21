@@ -1,12 +1,21 @@
-import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/server/auth";
+import { prisma } from "@upkeep/db";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { NotificationSettings } from "@/components/NotificationSettings";
 import { LogoutButton } from "@/components/LogoutButton";
+import { CategoryManager } from "@/components/CategoryManager";
 
 export default async function SettingsPage(): Promise<JSX.Element> {
   const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+
+  const categories = userId
+    ? await prisma.category.findMany({
+        where: { userId },
+        orderBy: [{ isDefault: "desc" }, { createdAt: "asc" }],
+      })
+    : [];
 
   return (
     <main className="page">
@@ -31,9 +40,13 @@ export default async function SettingsPage(): Promise<JSX.Element> {
         <NotificationSettings />
       </section>
 
-      <Link className="btn" href="/">
-        ホームに戻る
-      </Link>
+      <section className="card">
+        <h2>カテゴリ</h2>
+        <p className="muted">
+          タスク一覧の絞り込みタブに使われます。「ビジネス用」「勉強用」「家のこと」のように用途に合わせて追加できます。
+        </p>
+        <CategoryManager categories={categories} />
+      </section>
     </main>
   );
 }

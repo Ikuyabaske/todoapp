@@ -10,7 +10,7 @@ export interface TaskListItemData {
   repeatUnit: RepeatUnit;
   repeatInterval: number;
   nextDueAt: Date;
-  category: { name: string } | null;
+  category: { id: string; name: string } | null;
 }
 
 /**
@@ -28,7 +28,7 @@ export function TaskListItem({
   const dueAtStr = formatDateOnly(task.nextDueAt);
 
   return (
-    <Link className="task-list-item" href={`/tasks/${task.id}`}>
+    <Link className={`task-list-item task-row-priority-${task.priority}`} href={`/tasks/${task.id}`}>
       <span className="task-name">{task.name}</span>
       {showStatus ? (
         <TaskStatusBadge status={classifyTaskStatus(dueAtStr)} />

@@ -3,7 +3,8 @@ import { getServerSession } from "next-auth";
 import { classifyTaskStatus, formatDateOnly } from "@upkeep/core";
 import { authOptions } from "@/server/auth";
 import { prisma } from "@upkeep/db";
-import { TaskListItem, type TaskListItemData } from "@/components/TaskListItem";
+import type { TaskListItemData } from "@/components/TaskListItem";
+import { TaskListRow } from "@/components/TaskListRow";
 
 export default async function HomePage(): Promise<JSX.Element> {
   const session = await getServerSession(authOptions);
@@ -35,25 +36,18 @@ export default async function HomePage(): Promise<JSX.Element> {
 
   return (
     <main className="page">
-      <h1>Upkeep</h1>
+      <div className="list-header">
+        <h1>Upkeep</h1>
+        <Link className="btn btn-sm btn-primary" href="/tasks/new">
+          + タスク登録
+        </Link>
+      </div>
       <p className="lead">定期メンテナンス管理アプリ</p>
 
       <TaskGroup title="今日" tasks={today} emptyText="今日が期限のタスクはありません。" />
       <TaskGroup title="期限切れ" tasks={overdue} emptyText="期限切れのタスクはありません。" />
       <TaskGroup title="明日" tasks={tomorrow} emptyText="明日が期限のタスクはありません。" />
       <TaskGroup title="今後" tasks={upcoming} emptyText="明後日以降のタスクはありません。" limit={10} />
-
-      <div className="actions">
-        <Link className="btn" href="/tasks">
-          タスク一覧
-        </Link>
-        <Link className="btn btn-primary" href="/tasks/new">
-          タスクを登録
-        </Link>
-        <Link className="btn" href="/settings">
-          設定
-        </Link>
-      </div>
     </main>
   );
 }
@@ -83,7 +77,7 @@ function TaskGroup({
         <ul className="task-list">
           {visible.map((task) => (
             <li key={task.id}>
-              <TaskListItem task={task} showStatus />
+              <TaskListRow task={task} editMode={false} />
             </li>
           ))}
         </ul>

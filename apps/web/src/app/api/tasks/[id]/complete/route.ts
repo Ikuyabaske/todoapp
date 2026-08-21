@@ -32,11 +32,14 @@ export async function POST(
     const body = completeTaskSchema.parse(rawBody);
     const completedAt = body.completedAt ?? toJstDateString(new Date());
 
-    const nextDueAt = calculateNextDueDate({
-      repeatUnit: task.repeatUnit,
-      repeatInterval: task.repeatInterval,
-      completedAt,
-    });
+    const isOneTimeTask = task.repeatUnit === "ONCE";
+    const nextDueAt = isOneTimeTask
+      ? null
+      : calculateNextDueDate({
+          repeatUnit: task.repeatUnit,
+          repeatInterval: task.repeatInterval,
+          completedAt,
+        });
 
     const [history, updatedTask] = await prisma.$transaction([
       prisma.taskHistory.create({
@@ -51,7 +54,8 @@ export async function POST(
         where: { id: task.id },
         data: {
           lastCompletedAt: parseDateOnly(completedAt),
-          nextDueAt: parseDateOnly(nextDueAt),
+          ...(nextDueAt ? { nextDueAt: parseDateOnly(nextDueAt) } : {}),
+          ...(isOneTimeTask ? { isArchived: true, notificationEnabled: false } : {}),
           snoozeUntil: null,
         },
       }),

@@ -1,6 +1,6 @@
 import { formatDateOnly, parseDateOnly } from "./dateOnly";
 
-export type RepeatUnit = "DAY" | "WEEK" | "MONTH" | "YEAR";
+export type RepeatUnit = "ONCE" | "DAY" | "WEEK" | "MONTH" | "YEAR";
 
 export interface RecurrenceInput {
   repeatUnit: RepeatUnit;
@@ -30,6 +30,8 @@ export function calculateNextDueDate(input: RecurrenceInput): string {
   const base = parseDateOnly(completedAt);
 
   switch (repeatUnit) {
+    case "ONCE":
+      throw new Error("一回のみタスクには次回予定日はありません");
     case "DAY":
       return formatDateOnly(addDays(base, repeatInterval));
     case "WEEK":

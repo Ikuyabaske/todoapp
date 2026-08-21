@@ -3,6 +3,8 @@ import { decideNotification } from "../src/notification/decide";
 
 const baseTask = {
   nextDueAt: "2026-08-10",
+  repeatUnit: "MONTH" as const,
+  repeatInterval: 1,
   notificationEnabled: true,
   notificationTime: "09:00",
   preNotificationDays: 1,
@@ -20,7 +22,7 @@ describe("decideNotification", () => {
     // JST 2026-08-10 09:30 (通知時刻09:00を過ぎている)
     const now = new Date("2026-08-10T00:30:00.000Z");
     const decision = decideNotification(baseTask, now);
-    expect(decision).toMatchObject({ shouldNotify: true, kind: "DUE", days: 0 });
+    expect(decision).toMatchObject({ shouldNotify: true, kind: "DUE", days: 0, reminderSlot: "once" });
   });
 
   it("当日でも通知時刻より前ならfalse", () => {
@@ -49,6 +51,53 @@ describe("decideNotification", () => {
     const now = new Date("2026-08-13T00:30:00.000Z");
     const decision = decideNotification(baseTask, now);
     expect(decision).toMatchObject({ shouldNotify: true, kind: "OVERDUE", days: 3 });
+  });
+
+  describe("毎日タスクのリマインド", () => {
+    const dailyTask = {
+      ...baseTask,
+      repeatUnit: "DAY" as const,
+      repeatInterval: 1,
+      preNotificationDays: 0,
+    };
+
+    it("毎日タスクの当日通知は通知時刻から1時間ごとのスロットになる", () => {
+      const first = decideNotification(dailyTask, new Date("2026-08-10T00:30:00.000Z")); // JST 09:30
+      const second = decideNotification(dailyTask, new Date("2026-08-10T01:30:00.000Z")); // JST 10:30
+      const third = decideNotification(dailyTask, new Date("2026-08-10T02:29:00.000Z")); // JST 11:29
+
+      expect(first).toMatchObject({ shouldNotify: true, kind: "DUE", reminderSlot: "hourly-0" });
+      expect(second).toMatchObject({ shouldNotify: true, kind: "DUE", reminderSlot: "hourly-1" });
+      expect(third).toMatchObject({ shouldNotify: true, kind: "DUE", reminderSlot: "hourly-2" });
+    });
+
+    it("毎日タスクでも1時間が経過するまでは同じスロットになる", () => {
+      const first = decideNotification(dailyTask, new Date("2026-08-10T00:05:00.000Z")); // JST 09:05
+      const sameHour = decideNotification(dailyTask, new Date("2026-08-10T00:59:00.000Z")); // JST 09:59
+
+      expect(first.reminderSlot).toBe("hourly-0");
+      expect(sameHour.reminderSlot).toBe("hourly-0");
+    });
+
+    it("毎日タスクの期限超過通知も1時間ごとのスロットになる", () => {
+      const decision = decideNotification(dailyTask, new Date("2026-08-11T01:30:00.000Z")); // JST 10:30
+
+      expect(decision).toMatchObject({
+        shouldNotify: true,
+        kind: "OVERDUE",
+        days: 1,
+        reminderSlot: "hourly-1",
+      });
+    });
+
+    it("毎日タスクでも事前通知は従来通り1日1回にする", () => {
+      const decision = decideNotification(
+        { ...dailyTask, nextDueAt: "2026-08-11", preNotificationDays: 1 },
+        new Date("2026-08-10T00:30:00.000Z")
+      );
+
+      expect(decision).toMatchObject({ shouldNotify: true, kind: "PRE", reminderSlot: "once" });
+    });
   });
 
   it("scheduledForは常にJSTの今日の日付になる(重複防止キー)", () => {

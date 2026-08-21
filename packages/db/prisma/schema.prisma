@@ -15,9 +15,11 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../../../node_modules/.prisma/client"
 }
 
 enum RepeatUnit {
+  ONCE
   DAY
   WEEK
   MONTH
@@ -118,10 +120,11 @@ model NotificationHistory {
   task         Task             @relation(fields: [taskId], references: [id], onDelete: Cascade)
   type         NotificationType
   scheduledFor DateTime         @db.Date
+  reminderSlot String           @default("once")
   sentAt       DateTime         @default(now())
   success      Boolean          @default(true)
   attemptCount Int              @default(1)
   errorMessage String?
 
-  @@unique([taskId, type, scheduledFor])
+  @@unique([taskId, type, scheduledFor, reminderSlot])
 }

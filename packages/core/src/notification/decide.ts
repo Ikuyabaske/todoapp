@@ -5,6 +5,8 @@ import type { NotificationKind } from "./buildMessage";
 export interface DecideNotificationTaskInput {
   /** "YYYY-MM-DD" */
   nextDueAt: string;
+  repeatUnit: "ONCE" | "DAY" | "WEEK" | "MONTH" | "YEAR";
+  repeatInterval: number;
   notificationEnabled: boolean;
   /** "HH:mm" (JST壁時計) */
   notificationTime: string;
@@ -15,12 +17,17 @@ export interface DecideNotificationTaskInput {
 export interface NotificationDecision {
   shouldNotify: boolean;
   kind: NotificationKind;
-  /** 通知対象日。NotificationHistoryの重複防止キー(taskId, type, scheduledFor)に使う。 */
+  /** 通知対象日。NotificationHistoryの重複防止キー(taskId, type, scheduledFor, reminderSlot)に使う。 */
   scheduledFor: string;
   /** PRE: 残り日数 / OVERDUE: 超過日数（いずれも正の値）。DUEでは0。 */
   days: number;
   /** 今回の判定にsnoozeUntilが使われたか。trueの場合、呼び出し側で消費後にクリアすべき。 */
   consumedSnooze: boolean;
+  /**
+   * NotificationHistoryの重複防止キーに使う通知スロット。
+   * 通常はonce、毎日タスクの当日/超過通知だけhourly-Nで1時間ごとに分ける。
+   */
+  reminderSlot: string;
 }
 
 /**
@@ -33,9 +40,11 @@ export interface NotificationDecision {
  *   3. 種別を決定: 残り日数>0=PRE, =0=DUE, <0=OVERDUE
  *   4. 実効通知時刻を決定: snoozeUntilがあればそれを優先、無ければ通常のnotificationTime
  *   5. 現在時刻が実効通知時刻を過ぎていなければfalse
+ *   6. 毎日タスクの当日/超過通知は、実効通知時刻から1時間ごとのスロットを返す
  *
  * 実際の重複送信防止は呼び出し側がNotificationHistoryのユニーク制約
- * (taskId, type, scheduledFor) で行う。この関数はあくまで「今送るべきか」を判定するだけ。
+ * (taskId, type, scheduledFor, reminderSlot) で行う。この関数はあくまで
+ * 「今送るべきか」と「どの通知スロットか」を判定するだけ。
  */
 export function decideNotification(task: DecideNotificationTaskInput, now: Date): NotificationDecision {
   const todayStr = toJstDateString(now);
@@ -45,6 +54,7 @@ export function decideNotification(task: DecideNotificationTaskInput, now: Date)
     scheduledFor: todayStr,
     days,
     consumedSnooze: false,
+    reminderSlot: "once",
   });
 
   if (!task.notificationEnabled) {
@@ -65,8 +75,26 @@ export function decideNotification(task: DecideNotificationTaskInput, now: Date)
   const effectiveTime = useSnooze ? (task.snoozeUntil as Date) : baseTime;
 
   if (now.getTime() < effectiveTime.getTime()) {
-    return { shouldNotify: false, kind, scheduledFor: todayStr, days, consumedSnooze: false };
+    return { shouldNotify: false, kind, scheduledFor: todayStr, days, consumedSnooze: false, reminderSlot: "once" };
   }
 
-  return { shouldNotify: true, kind, scheduledFor: todayStr, days, consumedSnooze: useSnooze };
+  const reminderSlot = getReminderSlot(task, kind, now, effectiveTime);
+
+  return { shouldNotify: true, kind, scheduledFor: todayStr, days, consumedSnooze: useSnooze, reminderSlot };
+}
+
+function getReminderSlot(
+  task: DecideNotificationTaskInput,
+  kind: NotificationKind,
+  now: Date,
+  effectiveTime: Date
+): string {
+  const isDailyTask = task.repeatUnit === "DAY" && task.repeatInterval === 1;
+  if (!isDailyTask || kind === "PRE") {
+    return "once";
+  }
+
+  const elapsedMs = now.getTime() - effectiveTime.getTime();
+  const slot = Math.floor(elapsedMs / (60 * 60_000));
+  return `hourly-${slot}`;
 }

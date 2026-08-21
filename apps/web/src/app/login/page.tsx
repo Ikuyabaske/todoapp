@@ -1,18 +1,12 @@
-import Link from "next/link";
-import { Suspense } from "react";
-import { LoginForm } from "./login-form";
+import { redirect } from "next/navigation";
 
-export default function LoginPage(): JSX.Element {
-  return (
-    <main className="page">
-      <h1>Upkeep にログイン</h1>
-      {/* useSearchParams()を使うLoginFormはCSRバイアウトのためSuspenseで包む */}
-      <Suspense fallback={<p className="muted">読み込み中...</p>}>
-        <LoginForm />
-      </Suspense>
-      <p className="muted">
-        アカウントをお持ちでない方は <Link href="/signup">新規登録</Link>
-      </p>
-    </main>
-  );
+// SSOの発行元はhome-portalに完全移管済み。todoapp自身はログイン手段を持たないため、
+// このルートへの直接アクセス(旧ブックマーク等)もhome-portalの統一ログイン画面へ流す。
+export default function LoginPage({
+  searchParams,
+}: {
+  searchParams: { callbackUrl?: string };
+}): JSX.Element {
+  const callbackUrl = searchParams.callbackUrl ?? "https://tasks.ikuya-baske.com/";
+  redirect(`https://home.ikuya-baske.com/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
 }

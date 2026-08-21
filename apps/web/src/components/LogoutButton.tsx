@@ -9,7 +9,9 @@ export function LogoutButton(): JSX.Element {
   async function handleLogout(): Promise<void> {
     setPending(true);
     try {
-      await signOut({ callbackUrl: "/login" });
+      // SSOの発行元はhome-portalのみ(todoappはログイン手段を持たない)なので、
+      // ログアウト後はhome-portalのログイン画面へ遷移する。
+      await signOut({ callbackUrl: "https://home.ikuya-baske.com/login" });
     } finally {
       setPending(false);
     }

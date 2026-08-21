@@ -31,6 +31,12 @@ export function CompleteTaskForm({ taskId }: { taskId: string }): JSX.Element {
         setError(body.error ?? "完了処理に失敗しました");
         return;
       }
+      const body: { task?: { isArchived?: boolean } } = await res.json().catch(() => ({}));
+      if (body.task?.isArchived) {
+        router.push("/tasks");
+        router.refresh();
+        return;
+      }
       router.refresh();
     } catch {
       setError("通信エラーが発生しました");

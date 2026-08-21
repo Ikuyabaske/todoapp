@@ -17,6 +17,9 @@
     "db:seed": "npm run seed --workspace packages/db",
     "test": "npm run test --workspace packages/core"
   },
+  "prisma": {
+    "schema": "packages/db/prisma/schema.prisma"
+  },
   "engines": {
     "node": ">=20"
   }

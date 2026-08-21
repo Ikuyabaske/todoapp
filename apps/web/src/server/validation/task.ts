@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const repeatUnitSchema = z.enum(["DAY", "WEEK", "MONTH", "YEAR"]);
+export const repeatUnitSchema = z.enum(["ONCE", "DAY", "WEEK", "MONTH", "YEAR"]);
 export const prioritySchema = z.enum(["HIGH", "MEDIUM", "LOW"]);
 
 const dateOnlySchema = z

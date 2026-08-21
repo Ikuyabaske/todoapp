@@ -11,6 +11,7 @@ export function priorityLabel(priority: Priority): string {
 }
 
 const REPEAT_UNIT_LABELS: Record<RepeatUnit, string> = {
+  ONCE: "回",
   DAY: "日",
   WEEK: "週",
   MONTH: "か月",
@@ -19,8 +20,12 @@ const REPEAT_UNIT_LABELS: Record<RepeatUnit, string> = {
 
 /** 例: (MONTH, 1) -> "毎月", (MONTH, 3) -> "3か月ごと", (WEEK, 1) -> "毎週" */
 export function repeatLabel(unit: RepeatUnit, interval: number): string {
+  if (unit === "ONCE") {
+    return "一回のみ";
+  }
   if (interval === 1) {
     const everyLabel: Record<RepeatUnit, string> = {
+      ONCE: "一回のみ",
       DAY: "毎日",
       WEEK: "毎週",
       MONTH: "毎月",
